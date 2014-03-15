@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.5"?>
+<plugin>
+  <!-- ===================================================================== -->
+  <!-- POP UP                                                                -->
+  <!-- ===================================================================== -->
+	<extension point="org.eclipse.ui.popupMenus">
+		<objectContribution	adaptable="true"
+				objectClass="org.eclipse.jdt.core.IJavaElement"
+				id="org.ucdetector.popupMenus.project">
+			<menu label="%popupMenus.root"
+					path="additions"
+					id="ucdetectorGroup">
+			</menu>
+		</objectContribution>
+
+        <!-- DETECT OFBIZ RELATED ================= -->
+		<objectContribution	adaptable="true"
+				id="org.ucdetector.popupMenus.project.Analyze"
+				objectClass="org.eclipse.jdt.core.IJavaElement">
+            <action class="org.ucdetector.action.OfbizRelatedUCDetectorAction"
+                enablesFor="+"
+                id="org.ucdetector.OfbizRelatedSearchAction"
+                label="%OfbizAction.label"
+                tooltip="%OfbizAction.tooltip"
+                icon="$nl$/icons/ucd.gif"
+                menubarPath="ucdetectorGroup/ucdetector"/>
+		</objectContribution>
+	</extension>
+	
+  <!-- =====================================================================
+       UCDETECTOR REPORTS
+       ===================================================================== -->
+    <!-- TODO 
+    <extension point="org.ucdetector.reports">
+       <report resultFile="${reportName}_add.txt"
+               description="%report.additional.name"
+               id="additional" 
+               class="org.ucdetector.report.AdditionalReport" >
+       </report>
+    </xtension>
+    -->
+</plugin>
