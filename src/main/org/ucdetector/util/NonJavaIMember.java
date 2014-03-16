@@ -23,8 +23,10 @@ import org.eclipse.jdt.core.ITypeRoot;
 import org.eclipse.jdt.core.JavaModelException;
 
 /**
- * Helper class for the markers in non java file
+ * Helper class for the markers that are in a non java file
  * (e.g. bsh/ftl and xml)
+ * - to place markers
+ * - create reports
  */
 public class NonJavaIMember implements IMember {
   private final IResource resource;
@@ -76,7 +78,7 @@ public class NonJavaIMember implements IMember {
   }
 
   public String getPathToFile() {
-    return resource.getProjectRelativePath().toString().replaceFirst("hot-deploy", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    return resource.getProjectRelativePath().toString().replaceFirst("hot-deploy", "");
   }
 
   public String getFileName() {
@@ -100,126 +102,126 @@ public class NonJavaIMember implements IMember {
   }
 
   public boolean exists() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IJavaElement getAncestor(int arg0) {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public String getAttachedJavadoc(IProgressMonitor arg0) throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IResource getCorrespondingResource() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public int getElementType() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public String getHandleIdentifier() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IJavaModel getJavaModel() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IPath getPath() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IJavaElement getPrimaryElement() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public ISchedulingRule getSchedulingRule() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IResource getUnderlyingResource() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public boolean isReadOnly() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public boolean isStructureKnown() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   @SuppressWarnings("rawtypes")
   public Object getAdapter(Class adapter) {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public String getSource() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public void copy(IJavaElement arg0, IJavaElement arg1, String arg2, boolean arg3, IProgressMonitor arg4)
       throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public void delete(boolean arg0, IProgressMonitor arg1) throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public void move(IJavaElement arg0, IJavaElement arg1, String arg2, boolean arg3, IProgressMonitor arg4)
       throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public void rename(String arg0, boolean arg1, IProgressMonitor arg2) throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IJavaElement[] getChildren() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public boolean hasChildren() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public String[] getCategories() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IClassFile getClassFile() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public ICompilationUnit getCompilationUnit() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IType getDeclaringType() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public int getFlags() throws JavaModelException {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public int getOccurrenceCount() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public IType getType(String arg0, int arg1) {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public ITypeRoot getTypeRoot() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
   public boolean isBinary() {
-    throw new RuntimeException("Not implemented exception"); //$NON-NLS-1$
+    throw new RuntimeException("Not implemented exception");
   }
 
 }

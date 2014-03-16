@@ -15,6 +15,10 @@ import org.ucdetector.iterator.AbstractUCDetectorIterator;
 import org.ucdetector.iterator.OfBizSpecificUCDetectorIterator;
 import org.ucdetector.report.ReportNameManager;
 
+/**
+ * For more information see OfBizSpecificUCDetectorIterator class.
+ * But basically this is triggered when the "Analyze ofbiz" option is chosen from the popup menu. 
+ */
 public class OfbizRelatedUCDetectorAction extends AbstractUCDetectorAction {
   OfBizSpecificUCDetectorIterator iterator;
 
@@ -32,7 +36,7 @@ public class OfbizRelatedUCDetectorAction extends AbstractUCDetectorAction {
     //
     String reportFolder = ReportNameManager.getReportDir(false);
     if (reportFolder != null && created > 0) {
-      mes.append(". "); //$NON-NLS-1$
+      mes.append(". ");
       String s = NLS.bind(Messages.UCDetectorAction_ResultReport, reportFolder);
       mes.append(s);
     }

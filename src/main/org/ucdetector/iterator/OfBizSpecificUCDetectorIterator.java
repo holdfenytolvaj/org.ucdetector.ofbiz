@@ -25,17 +25,25 @@ import org.eclipse.jdt.core.IMember;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.JavaModelException;
 import org.ucdetector.Messages;
-import org.ucdetector.UCDInfo;
 import org.ucdetector.preferences.Prefs;
 import org.ucdetector.search.OfBizSpecificXmlParser;
 import org.ucdetector.search.OfbizSpecificSearchManager;
 import org.ucdetector.util.MarkerFactory;
 import org.ucdetector.util.NonJavaIMember;
+import org.ucdetector.util.ReferenceAndLocation;
 
+/**
+ * 
+ * The main function is handleEndGlobal
+ * 
+ * It first collects information about services/screens etc (for more see scanOfBizProjectOrFolder)
+ * Secondly it goes through it and identifies unused or not referenced items
+ * 
+ */
 public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator {
 
   private final Map<String, String> serviceMethodToNameMap = new HashMap<String, String>();
-  private final Map<String, IResource> serviceNameToFilePathMap = new HashMap<String, IResource>();
+  private final Map<String, IResource> serviceNameAndFilePathMap = new HashMap<String, IResource>();
   private final Set<String> referencedServiceList = new HashSet<String>();
 
   private final Set<NonJavaIMember> ftlList = new HashSet<NonJavaIMember>();
@@ -45,6 +53,12 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
   private final Set<String> referencedBshOrGroovyList = new HashSet<String>();
 
   private final List<IMethod> ofbizServiceList = new ArrayList<IMethod>();
+
+  //controller-screen specific
+  private final Set<String> referencedViewList = new HashSet<String>();
+  private final Map<String, ReferenceAndLocation> viewDefinitionMap = new HashMap<String, ReferenceAndLocation>();
+  private final Set<String> referencedScreenList = new HashSet<String>();
+  private final Map<String, IResource> screenNameAndFilePathMap = new HashMap<String, IResource>();
 
   private final OfBizSpecificXmlParser helper = new OfBizSpecificXmlParser();
 
@@ -58,7 +72,7 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
 
   @Override
   public String getJobName() {
-    return "Search for Ofbiz related elements"; //$NON-NLS-1$
+    return "Search for Ofbiz related elements";
   }
 
   public int getMarkerCreated() {
@@ -70,10 +84,6 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
     MarkerFactory.deleteMarkers(javaElement);
   }
 
-  /**
-   * Call searchManager for collected elements
-   * @throws CoreException if the search failed
-   */
   @Override
   public void handleEndGlobal(IJavaElement[] objects) throws CoreException {
     getMonitor().beginTask(Messages.UCDetectorIterator_MONITOR_INFO, 100);
@@ -88,24 +98,30 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
     int totalSize = getElelementsToDetectCount();
     OfbizSpecificSearchManager searchManager = new OfbizSpecificSearchManager(getMonitor(), totalSize,
         getMarkerFactory());
-    searchManager.init(serviceMethodToNameMap, referencedFtlList, referencedBshOrGroovyList, referencedServiceList);
 
     try {
-      UCDInfo.logMemoryInfo();
-      searchManager.searchServices(ofbizServiceList, SERVICE_METHOD_WORKEFFORT);
-      searchManager.searchServicesDefinitions(serviceNameToFilePathMap);
+      searchManager.searchServices(ofbizServiceList, serviceMethodToNameMap, SERVICE_METHOD_WORKEFFORT);
+      searchManager.searchServicesDefinitions(serviceNameAndFilePathMap, referencedServiceList);
       getMonitor().internalWorked(SERVICE_DEF_WORKEFFORT);
-      searchManager.searchFtl(ftlList);
+
+      searchManager.searchFtls(ftlList, referencedFtlList);
       getMonitor().internalWorked(FTL_WORKEFFORT);
-      searchManager.searchBsh(bshOrGroovyList);
+
+      searchManager.searchBshOrGroovyFiles(bshOrGroovyList, referencedBshOrGroovyList);
       getMonitor().internalWorked(BSH_WORKEFFORT);
-      UCDInfo.logMemoryInfo();
+
+      searchManager.searchViews(viewDefinitionMap, referencedViewList, screenNameAndFilePathMap);
+      searchManager.searchScreens(screenNameAndFilePathMap, referencedScreenList);
+
     }
     finally {
       markerCreated = searchManager.getMarkerCreated();
     }
   }
 
+  /**
+   * Only used to estimate "work effort" for eclipse progress dialogue.
+   */
   @Override
   public int getElelementsToDetectCount() {
     int result = 0;
@@ -114,7 +130,7 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
   }
 
   /**
-   * Extract service names and methods from xml definitions
+   * Extract service names / methods / screens etc. for faster searches
    * @throws CoreException 
    */
   private void scanOfBizProjectOrFolder(IContainer project) throws CoreException {
@@ -127,24 +143,34 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
         showProgress(resource);
         scanOfBizProjectOrFolder((IFolder) resource);
       }
-      else if ("xml".equals(resource.getFileExtension())) { //$NON-NLS-1$
-        helper.extractDefinitionsFromXml(resource, serviceMethodToNameMap, serviceNameToFilePathMap, referencedFtlList,
-            referencedBshOrGroovyList, referencedServiceList);
+      else if ("xml".equals(resource.getFileExtension())) {
+
+        helper.extractDefinitionsFromXml(resource, serviceMethodToNameMap, serviceNameAndFilePathMap,
+            referencedFtlList, referencedBshOrGroovyList, referencedServiceList, referencedViewList, viewDefinitionMap,
+            referencedScreenList, screenNameAndFilePathMap);
+
       }
-      else if ("ftl".equals(resource.getFileExtension())) { //$NON-NLS-1$
+      else if ("ftl".equals(resource.getFileExtension())) {
         ftlList.add(new NonJavaIMember(resource));
+        helper.searchForProgrammaticallyRenderedScreen(resource, referencedScreenList);
       }
-      else if ("bsh".equals(resource.getFileExtension())) { //$NON-NLS-1$
+      else if ("bsh".equals(resource.getFileExtension())) {
         bshOrGroovyList.add(new NonJavaIMember(resource));
+        helper.searchForProgrammaticallyRenderedScreen(resource, referencedScreenList);
       }
-      else if ("groovy".equals(resource.getFileExtension())) { //$NON-NLS-1$
+      else if ("bsh".equals(resource.getFileExtension())) {
+        helper.searchForProgrammaticallyRenderedScreen(resource, referencedScreenList);
+      }
+      else if ("groovy".equals(resource.getFileExtension())) {
         bshOrGroovyList.add(new NonJavaIMember(resource));
       }
     }
   }
 
+  /** For eclipse's progress dialogue */
+  @SuppressWarnings("javadoc")
   public final void showProgress(IResource resource) {
-    String msg = String.format("Scanning %s", resource.getFullPath().toString());//$NON-NLS-1$
+    String msg = String.format("Scanning %s", resource.getFullPath().toString());
     getMonitor().subTask(msg);
   }
 
@@ -152,10 +178,14 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
     getMonitor().throwIfIsCanceled();
   }
 
+  /**
+   * Overrriden method from AbstractUCDetectorIterator that goes through all Java elements and methods
+   * and analyze them for usage. For us we only care about methods that might be ofbiz services.
+   */
   @Override
   protected void handleMethod(IMethod method) throws CoreException {
     if (!Prefs.isUCDetectionInMethods()) {
-      debugNotHandle(method, "not isUCDetectionInMethods"); //$NON-NLS-1$
+      debugNotHandle(method, "not isUCDetectionInMethods");
       return;
     }
     if (isOfBizService(method)) {
@@ -163,16 +193,14 @@ public class OfBizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
     }
   }
 
+  /** @return true if the method is static has two parameters namely a DispatchContext and a map */
   private static boolean isOfBizService(IMethod method) throws JavaModelException {
     if (isStatic(method) && isPublic(method)) {
       String[] paramTypes = method.getParameterTypes();
-      if (paramTypes.length == 2 && paramTypes[0].equals("QDispatchContext;")) {//$NON-NLS-1$
-      }
-      if (paramTypes.length == 2 && paramTypes[0].equals("QDispatchContext;") //$NON-NLS-1$
-          && (paramTypes[1].equals("QMap<QString;QObject;>;") || //$NON-NLS-1$ 
-              paramTypes[1].equals("QMap<QString;+QObject;>;") || //$NON-NLS-1$
-              paramTypes[1].equals("QMap<QString;*>;") || //$NON-NLS-1$
-          paramTypes[1].equals("QMap;") //$NON-NLS-1$
+      if (paramTypes.length == 2
+          && paramTypes[0].equals("QDispatchContext;")
+          && (paramTypes[1].equals("QMap<QString;QObject;>;") || paramTypes[1].equals("QMap<QString;+QObject;>;")
+              || paramTypes[1].equals("QMap<QString;*>;") || paramTypes[1].equals("QMap;")
 
           )) {
         return true;

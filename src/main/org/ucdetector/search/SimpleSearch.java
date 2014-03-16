@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.search.core.text.TextSearchEngine;
@@ -19,6 +20,7 @@ import org.eclipse.search.ui.text.FileTextSearchScope;
 import org.ucdetector.Log;
 import org.ucdetector.UCDetectorPlugin;
 
+/** Helper class that simulate Eclipse's "File search" dialogue. */
 public class SimpleSearch {
 
   public static final class SearchResult {
@@ -35,22 +37,47 @@ public class SimpleSearch {
     }
   }
 
-  /**
-   * The simplest search possible, same as "file search" in eclipse. 
-   */
-  @SuppressWarnings("javadoc")
+  public static List<SearchResult> searchTextSimpleInResource(String stringToSearch, IResource resource)
+      throws CoreException {
+
+    FileTextSearchScope scope = FileTextSearchScope.newSearchScope(new IResource[] { resource }, new String[] { "*" },
+        false);
+    Pattern searchPattern = Pattern.compile(Pattern.quote(stringToSearch));
+    return search(scope, searchPattern);
+
+  }
+
   public static List<SearchResult> searchTextSimple(String stringToSearch, String[] fileNamePattern)
       throws CoreException {
 
     FileTextSearchScope scope = FileTextSearchScope.newWorkspaceScope(fileNamePattern, false);
-
     Pattern searchPattern = Pattern.compile(Pattern.quote(stringToSearch));
-    SearchWithResultRequestor requestor = new SearchWithResultRequestor();
+    return search(scope, searchPattern);
+
+  }
+
+  public static List<SearchResult> searchTextRegularExpressionInResource(String stringToSearch, IResource resource)
+      throws CoreException {
+    FileTextSearchScope scope = FileTextSearchScope.newSearchScope(new IResource[] { resource }, new String[] { "*" },
+        false);
+    Pattern searchPattern = Pattern.compile(stringToSearch);
+    return search(scope, searchPattern);
+  }
+
+  public static List<SearchResult> searchTextRegularExpression(String stringToSearch, String[] fileNamePattern)
+      throws CoreException {
+    FileTextSearchScope scope = FileTextSearchScope.newWorkspaceScope(fileNamePattern, false);
+    Pattern searchPattern = Pattern.compile(stringToSearch);
+    return search(scope, searchPattern);
+  }
+
+  private static List<SearchResult> search(FileTextSearchScope scope, Pattern searchPattern) throws CoreException {
+    MatchedLocationRequestor requestor = new MatchedLocationRequestor();
     try {
       TextSearchEngine.createDefault().search(scope, requestor, searchPattern, null);
     }
     catch (OperationCanceledException e) {
-      Log.info("Text search canceled"); //$NON-NLS-1$
+      Log.info("Text search canceled");
     }
     catch (OutOfMemoryError e) {
       UCDetectorPlugin.handleOutOfMemoryError(e);
@@ -58,11 +85,8 @@ public class SimpleSearch {
     return requestor.matchedFiles;
   }
 
-  private static final class SearchWithResultRequestor extends TextSearchRequestor {
+  private static final class MatchedLocationRequestor extends TextSearchRequestor {
     final List<SearchResult> matchedFiles = new ArrayList<SearchResult>();
-
-    SearchWithResultRequestor() {
-    }
 
     @Override
     public boolean acceptPatternMatch(TextSearchMatchAccess matchAccess) throws CoreException {
@@ -70,8 +94,8 @@ public class SimpleSearch {
       int length = matchAccess.getMatchLength();
       int lineNumber = getLineNumber(offset, matchAccess);
       String path = matchAccess.getFile().getFullPath().toString();
-      matchedFiles.add(new SearchResult(path, offset, length, lineNumber));
-      return true;
+
+      return matchedFiles.add(new SearchResult(path, offset, length, lineNumber));
     }
 
     private static int getLineNumber(int offset, TextSearchMatchAccess matchAccess) {
@@ -88,21 +112,36 @@ public class SimpleSearch {
     }
   }
 
-  public static List<SearchResult> searchTextRegularExpression(String stringToSearch, String[] fileNamePattern)
+  public static List<String> searchRegularExpressionReturnWithSelection(String stringToSearch, IResource resource)
       throws CoreException {
-    FileTextSearchScope scope = FileTextSearchScope.newWorkspaceScope(fileNamePattern, false);
 
+    FileTextSearchScope scope = FileTextSearchScope.newSearchScope(new IResource[] { resource }, new String[] { "*" },
+        false);
     Pattern searchPattern = Pattern.compile(stringToSearch);
-    SearchWithResultRequestor requestor = new SearchWithResultRequestor();
+    MatchedSelectionRequestor requestor = new MatchedSelectionRequestor();
     try {
       TextSearchEngine.createDefault().search(scope, requestor, searchPattern, null);
     }
     catch (OperationCanceledException e) {
-      Log.info("Text search canceled"); //$NON-NLS-1$
+      Log.info("Text search canceled");
     }
     catch (OutOfMemoryError e) {
       UCDetectorPlugin.handleOutOfMemoryError(e);
     }
-    return requestor.matchedFiles;
+    return requestor.matchedSelection;
+
   }
+
+  private static final class MatchedSelectionRequestor extends TextSearchRequestor {
+    final List<String> matchedSelection = new ArrayList<String>();
+
+    @Override
+    public boolean acceptPatternMatch(TextSearchMatchAccess matchAccess) throws CoreException {
+      int offset = matchAccess.getMatchOffset();
+      int length = matchAccess.getMatchLength();
+
+      return matchedSelection.add(matchAccess.getFileContent(offset, length));
+    }
+  }
+
 }
