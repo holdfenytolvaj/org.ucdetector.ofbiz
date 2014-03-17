@@ -1,0 +1,15 @@
+### Eclipse Workspace Patch 1.0
+#P org.ucdetector
+Index: build/build.xml
+===================================================================
+--- build/build.xml	(revision 1888)
++++ build/build.xml	(working copy)
+@@ -28,7 +28,7 @@
+     <pde.exportPlugins destination="${output.dir}"
+                        exportSource="false"
+                        exportType="directory"
+-                       plugins="org.ucdetector,org.ucdetector.additional"
++                       plugins="org.ucdetector,org.ucdetector.additional,org.ucdetector.ofbiz"
+                        useJARFormat="true" />
+     <echo>Please wait. Plugins will be exported to: ${output.plugins.dir}</echo>
+   </target>
