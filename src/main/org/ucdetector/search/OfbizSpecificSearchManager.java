@@ -97,7 +97,7 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
       }
 
       if (!hasOfbizServiceReference(method, serviceMethodToNameMap)) {
-        markerFactory.createReferenceMarkerOther(method, "[OfBiz] Looks like a service but has no service definition!",
+        markerFactory.createReferenceMarkerOther(method, "[Ofbiz] Looks like a service but has no service definition!",
             line);
         markerCreated++;
       }
@@ -127,8 +127,8 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
       if (resultList.size() == 1) {
         SearchResult sr = resultList.get(0);
         NonJavaIMember serviceDefinitionMember = new NonJavaIMember(serviceNameToFilePathMap.get(serviceName),
-            sr.offset, sr.length);
-        markerFactory.createReferenceMarker(serviceDefinitionMember, "[OfBiz] The service \"" + serviceName
+            sr.offset, sr.length, sr.lineNumber);
+        markerFactory.createReferenceMarker(serviceDefinitionMember, "[Ofbiz] The service \"" + serviceName
             + "\" is not called from anywhere!", sr.lineNumber, 0);
         markerCreated++;
 
@@ -160,7 +160,7 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
 
         if (!isIncluded) {
           markerFactory.createReferenceMarker(ftlMember,
-              "[OfBiz] This file is not referenced from screen definitions neither included from other files!", 1, 0);
+              "[Ofbiz] This file is not referenced from screen definitions neither included from other files!", 1, 0);
           markerCreated++;
 
           Log.info("Ftl: " + ftlMember.getPathToFile() + " is not used");
@@ -185,7 +185,7 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
 
       if (!referencedBshOrGroovyList.contains(bshOrGroovyMember.getPathToFile())) {
         markerFactory.createReferenceMarker(bshOrGroovyMember,
-            "[OfBiz] This file is not referenced from screen definitions!", 1, 0);
+            "[Ofbiz] This file is not referenced from screen definitions!", 1, 0);
         markerCreated++;
 
         Log.info("Bsh: " + bshOrGroovyMember.getPathToFile() + " is not used");
@@ -211,18 +211,20 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
       showProgress("views", ++localSearchCurrentPosition, localSearchTotal);
 
       if (!referencedViewList.contains(viewName)) {
-        markerFactory.createReferenceMarker(
-            getNonJavaIMemberForViewDefinition(viewName, viewDefinitionMap.get(viewName).location),
-            "[OfBiz] This view is not referenced!", 1, 0);
+        NonJavaIMember viewIMember = getNonJavaIMemberForViewDefinition(viewName,
+            viewDefinitionMap.get(viewName).location);
+        markerFactory.createReferenceMarker(viewIMember, "[Ofbiz] This view is not referenced!",
+            viewIMember.getLineNumber(), 0);
         markerCreated++;
 
         Log.info("View: " + viewName + " is not used");
       }
 
       if (!screenNameAndFilePathMap.containsKey(viewDefinitionMap.get(viewName).referencedItem)) {
-        markerFactory.createReferenceMarker(
-            getNonJavaIMemberForViewDefinition(viewName, viewDefinitionMap.get(viewName).location),
-            "[OfBiz] The screen of this view does not exists!", 1, 0);
+        NonJavaIMember viewIMember = getNonJavaIMemberForViewDefinition(viewName,
+            viewDefinitionMap.get(viewName).location);
+        markerFactory.createReferenceMarker(viewIMember, "[Ofbiz] The screen of this view does not exists!",
+            viewIMember.getLineNumber(), 0);
         markerCreated++;
 
         Log.info("View's screen: " + viewDefinitionMap.get(viewName).referencedItem + " is not used");
@@ -242,14 +244,14 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
     //easy case it was put as a one-liner
     if (resultList.size() == 1) {
       SearchResult sr = resultList.get(0);
-      return new NonJavaIMember(location, sr.offset, sr.length);
+      return new NonJavaIMember(location, sr.offset, sr.length, sr.lineNumber);
     }
 
     //we only search for name="viewName" in theory it is enough in the controller
     resultList = SimpleSearch.searchTextSimpleInResource("name=\"" + viewName + "\"", location);
     if (resultList.size() == 1) {
       SearchResult sr = resultList.get(0);
-      return new NonJavaIMember(location, sr.offset, sr.length);
+      return new NonJavaIMember(location, sr.offset, sr.length, sr.lineNumber);
     }
 
     //giving up for now
@@ -270,7 +272,7 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
       if (!referencedScreenList.contains(screenName)) {
         markerFactory.createReferenceMarker(
             getNonJavaIMemberForScreenDefinition(screenName, screenNameAndFilePathMap.get(screenName)),
-            "[OfBiz] This screen is not referenced from anywhere!", 1, 0);
+            "[Ofbiz] This screen is not referenced from anywhere!", 1, 0);
         markerCreated++;
 
         Log.info("Screen: " + screenName + " is not used");
@@ -290,7 +292,7 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
     //easy case it was put as a one-liner
     if (resultList.size() == 1) {
       SearchResult sr = resultList.get(0);
-      return new NonJavaIMember(location, sr.offset, sr.length);
+      return new NonJavaIMember(location, sr.offset, sr.length, sr.lineNumber);
     }
 
     //giving up for now

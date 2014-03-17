@@ -32,15 +32,25 @@ public class NonJavaIMember implements IMember {
   private final IResource resource;
   private final int offset;
   private final int length;
+  private final int lineNumber;
 
   public NonJavaIMember(IResource resource) {
     this(resource, 0, 0);
   }
 
   public NonJavaIMember(IResource resource, int offset, int length) {
+    this(resource, offset, length, 0);
+  }
+
+  public NonJavaIMember(IResource resource, int offset, int length, int lineNumber) {
     this.resource = resource;
     this.offset = offset;
     this.length = length;
+    this.lineNumber = lineNumber;
+  }
+
+  public int getLineNumber() {
+    return lineNumber;
   }
 
   public IResource getResource() {
@@ -78,7 +88,7 @@ public class NonJavaIMember implements IMember {
   }
 
   public String getPathToFile() {
-    return resource.getProjectRelativePath().toString().replaceFirst("hot-deploy", "");
+    return resource.getProjectRelativePath().toString().replaceFirst("applications", "").replaceFirst("hot-deploy", "");
   }
 
   public String getFileName() {

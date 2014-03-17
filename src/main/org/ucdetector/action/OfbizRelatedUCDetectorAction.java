@@ -12,19 +12,19 @@ import org.eclipse.osgi.util.NLS;
 import org.ucdetector.Messages;
 import org.ucdetector.UCDetectorPlugin;
 import org.ucdetector.iterator.AbstractUCDetectorIterator;
-import org.ucdetector.iterator.OfBizSpecificUCDetectorIterator;
+import org.ucdetector.iterator.OfbizSpecificUCDetectorIterator;
 import org.ucdetector.report.ReportNameManager;
 
 /**
- * For more information see OfBizSpecificUCDetectorIterator class.
- * But basically this is triggered when the "Analyze ofbiz" option is chosen from the popup menu. 
+ * For more information see OfbizSpecificUCDetectorIterator class.
+ * But basically this is triggered when the "Analyze Ofbiz" option is chosen from the popup menu. 
  */
 public class OfbizRelatedUCDetectorAction extends AbstractUCDetectorAction {
-  OfBizSpecificUCDetectorIterator iterator;
+  OfbizSpecificUCDetectorIterator iterator;
 
   @Override
   protected AbstractUCDetectorIterator createIterator() {
-    iterator = new OfBizSpecificUCDetectorIterator();
+    iterator = new OfbizSpecificUCDetectorIterator();
     return iterator;
   }
 

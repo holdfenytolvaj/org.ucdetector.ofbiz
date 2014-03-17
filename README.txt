@@ -10,7 +10,7 @@ some of the services (and other items) are not used any more.
 - mark views that are calling not existing screens or not called from controllers
 
 --- How to use -------------------------------------
-just get the two jars from the build
+just get the two jars from the release
 and put it into eclipse's dropin directory
 (In Ubuntu: ~/.eclipse/org.eclipse.platform../dropins)
 
@@ -19,4 +19,5 @@ you need to checkout first the org.ucdetector project from:
 http://www.ucdetector.org/custom.html
 and then follow the steps there. This extension follows the 
 original plugin's coding style, lets respect that.
+To build you have to apply the patch found in the build directory.
 
