@@ -10,9 +10,14 @@ some of the services (and other items) are not used any more.
 - mark views that are calling not existing screens or not called from controllers
 
 --- How to use -------------------------------------
-just get the two jars from the release
-and put it into eclipse's dropin directory
-(In Ubuntu: ~/.eclipse/org.eclipse.platform../dropins)
+1) Grab the latest release from https://github.com/holdfenytolvaj/org.ucdetector.ofbiz/releases
+2) You need to unzip into eclipse's dropin folder.
+   (In Ubuntu: ~/.eclipse/org.eclipse.platform../dropins)
+3) Start eclipse
+4) Right click on Project -> select UCDetector -> Analyze Ofbiz
+5) Add the tab "Markers" to your view
+6) Some report will be generated under /workspace/ucdetector_reports (this can be configured on the options)
+
 
 --- How to modify ---------------------------------- 
 you need to checkout first the org.ucdetector project from:
