@@ -28,6 +28,7 @@ import org.ucdetector.Messages;
 import org.ucdetector.preferences.Prefs;
 import org.ucdetector.search.OfbizSpecificSearchManager;
 import org.ucdetector.search.OfbizSpecificXmlParser;
+import org.ucdetector.search.UISearchProgressHelper;
 import org.ucdetector.util.MarkerFactory;
 import org.ucdetector.util.NonJavaIMember;
 import org.ucdetector.util.ReferenceAndLocation;
@@ -63,11 +64,7 @@ public class OfbizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
   private final OfbizSpecificXmlParser helper = new OfbizSpecificXmlParser();
 
   private final int SCAN_WORKEFFORT = 20;
-  private final int SERVICE_METHOD_WORKEFFORT = 40;
-  private final int SERVICE_DEF_WORKEFFORT = 20;
-  private final int FTL_WORKEFFORT = 5;
-  private final int BSH_WORKEFFORT = 5;
-  private final int SCREEN_WORKEFFORT = 10;
+  private final int SEARCH_WORKEFFORT = 80;
 
   private int markerCreated;
 
@@ -88,32 +85,37 @@ public class OfbizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
   @Override
   public void handleEndGlobal(IJavaElement[] objects) throws CoreException {
     getMonitor().beginTask(Messages.UCDetectorIterator_MONITOR_INFO, 100);
-    getMonitor().internalWorked(1);
 
     if (objects.length > 0) {
-      UIProgressHelper progressHelper = new UIProgressHelper(getMonitor(), SCAN_WORKEFFORT, 20);
+      UIScanProgressHelper progressHelper = new UIScanProgressHelper(getMonitor(), SCAN_WORKEFFORT, /*guess*/
+      SCAN_WORKEFFORT * 40);
       IProject project = objects[0].getCorrespondingResource().getProject();
       scanOfbizProjectOrFolder(project, progressHelper);
     }
 
-    int totalSize = getElelementsToDetectCount();
-    OfbizSpecificSearchManager searchManager = new OfbizSpecificSearchManager(getMonitor(), totalSize,
-        getMarkerFactory());
+    OfbizSpecificSearchManager searchManager = new OfbizSpecificSearchManager(getMarkerFactory());
 
     try {
-      searchManager.searchServices(ofbizServiceList, serviceMethodToNameMap, SERVICE_METHOD_WORKEFFORT);
-      searchManager.searchServicesDefinitions(serviceNameAndFilePathMap, referencedServiceList);
-      getMonitor().internalWorked(SERVICE_DEF_WORKEFFORT);
+      UISearchProgressHelper searchProgressHelper = new UISearchProgressHelper(getMonitor(), SEARCH_WORKEFFORT,
+          getElelementsToDetectCount());
 
-      searchManager.searchFtls(ftlList, referencedFtlList);
-      getMonitor().internalWorked(FTL_WORKEFFORT);
+      searchProgressHelper.resetLocal(ofbizServiceList.size());
+      searchManager.searchServices(ofbizServiceList, serviceMethodToNameMap, searchProgressHelper);
 
-      searchManager.searchBshOrGroovyFiles(bshOrGroovyList, referencedBshOrGroovyList);
-      getMonitor().internalWorked(BSH_WORKEFFORT);
+      searchProgressHelper.resetLocal(serviceNameAndFilePathMap.size());
+      searchManager.searchServicesDefinitions(serviceNameAndFilePathMap, referencedServiceList, searchProgressHelper);
 
-      searchManager.searchViews(viewDefinitionMap, referencedViewList, screenNameAndFilePathMap);
-      searchManager.searchScreens(screenNameAndFilePathMap, referencedScreenList);
-      getMonitor().internalWorked(SCREEN_WORKEFFORT);
+      searchProgressHelper.resetLocal(ftlList.size());
+      searchManager.searchFtls(ftlList, referencedFtlList, searchProgressHelper);
+
+      searchProgressHelper.resetLocal(bshOrGroovyList.size());
+      searchManager.searchBshOrGroovyFiles(bshOrGroovyList, referencedBshOrGroovyList, searchProgressHelper);
+
+      searchProgressHelper.resetLocal(viewDefinitionMap.size());
+      searchManager.searchViews(viewDefinitionMap, referencedViewList, screenNameAndFilePathMap, searchProgressHelper);
+
+      searchProgressHelper.resetLocal(screenNameAndFilePathMap.size());
+      searchManager.searchScreens(screenNameAndFilePathMap, referencedScreenList, searchProgressHelper);
 
     }
     finally {
@@ -126,16 +128,15 @@ public class OfbizSpecificUCDetectorIterator extends AbstractUCDetectorIterator 
    */
   @Override
   public int getElelementsToDetectCount() {
-    int result = 0;
-    result += bshOrGroovyList.size() + ftlList.size() + ofbizServiceList.size() + serviceMethodToNameMap.size();
-    return result;
+    return ofbizServiceList.size() + serviceNameAndFilePathMap.size() + ftlList.size() + bshOrGroovyList.size()
+        + viewDefinitionMap.size() + screenNameAndFilePathMap.size();
   }
 
   /**
    * Extract service names / methods / screens etc. for faster searches
    * @throws CoreException 
    */
-  private void scanOfbizProjectOrFolder(IContainer project, UIProgressHelper progressHelper) throws CoreException {
+  private void scanOfbizProjectOrFolder(IContainer project, UIScanProgressHelper progressHelper) throws CoreException {
     List<IResource> resourceList = new ArrayList<IResource>(Arrays.asList(project.members(IContainer.EXCLUDE_DERIVED)));
 
     for (IResource resource : resourceList) {

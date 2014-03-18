@@ -16,7 +16,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jdt.core.IMethod;
 import org.ucdetector.Log;
-import org.ucdetector.UCDInfo;
 import org.ucdetector.report.ReportParam;
 import org.ucdetector.search.SimpleSearch.SearchResult;
 import org.ucdetector.util.MarkerFactory;
@@ -31,36 +30,13 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
 
   private int markerCreated = 0;
   private final LineManger lineManger = new LineManger();
-  private final UCDProgressMonitor monitor;
-  private final int globalSearchTotal;
-  private int globalSearchCurrentPosition = 0;
   private final MarkerFactory markerFactory;
 
   private final List<IStatus> exceptionListDuringSearch = new ArrayList<IStatus>();
 
-  public OfbizSpecificSearchManager(UCDProgressMonitor monitor, int searchTotal, MarkerFactory markerFactory) {
-    this.monitor = monitor;
-    this.globalSearchTotal = searchTotal;
+  public OfbizSpecificSearchManager(MarkerFactory markerFactory) {
     this.markerFactory = markerFactory;
     ReportParam.lineManager = lineManger;// Hack :-(
-  }
-
-  @SuppressWarnings("boxing")
-  public final void showProgress(String type, int localSearchCurrentPosition, int localSearchTotal) {
-    globalSearchCurrentPosition++;
-
-    if (localSearchCurrentPosition == 1 || localSearchCurrentPosition % 10 == 0
-        || localSearchCurrentPosition == localSearchTotal) {
-      String msg = String.format("Search %4s/%4s %s. Markers %4s. Exceptions %2s. Total %4s/%4s",
-          localSearchCurrentPosition, localSearchTotal, type, markerCreated, exceptionListDuringSearch.size(),
-          globalSearchCurrentPosition, globalSearchTotal);
-      Log.info(msg + " - " + UCDInfo.getNow(true)); //adding timestamp
-      monitor.subTask(msg);
-    }
-  }
-
-  private void checkForCancel() {
-    monitor.throwIfIsCanceled();
   }
 
   public int getMarkerCreated() {
@@ -79,16 +55,12 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
   /**
    * Check whether methods that looks like a service, has service definition or not.
    */
-  @SuppressWarnings({ "javadoc", "boxing" })
-  public void searchServices(List<IMethod> serviceList, Map<String, String> serviceMethodToNameMap, int workEffort)
-      throws CoreException {
-    int effortUnit = ((Double) Math.ceil(Double.valueOf(serviceList.size()) / workEffort)).intValue();
-    int currentProgress = 0;
+  @SuppressWarnings({ "javadoc" })
+  public void searchServices(List<IMethod> serviceList, Map<String, String> serviceMethodToNameMap,
+      UISearchProgressHelper progressHelper) throws CoreException {
 
     for (IMethod method : serviceList) {
-      if (currentProgress % effortUnit == 0) {
-        monitor.internalWorked(1);
-      }
+      progressHelper.showProgress("service methods", markerCreated, exceptionListDuringSearch.size());
 
       int line = lineManger.getLine(method);
       if (line == LineManger.LINE_NOT_FOUND) {
@@ -111,13 +83,10 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
    */
   @SuppressWarnings("javadoc")
   public void searchServicesDefinitions(Map<String, IResource> serviceNameToFilePathMap,
-      Set<String> referencedServiceList) throws CoreException {
-    int localSearchCurrentPosition = 0;
-    int localSearchTotal = serviceNameToFilePathMap.keySet().size();
+      Set<String> referencedServiceList, UISearchProgressHelper progressHelper) throws CoreException {
 
     for (String serviceName : serviceNameToFilePathMap.keySet()) {
-      checkForCancel();
-      showProgress("Service Definitions", ++localSearchCurrentPosition, localSearchTotal);
+      progressHelper.showProgress("service definitions", markerCreated, exceptionListDuringSearch.size());
 
       if (referencedServiceList.contains(serviceName)) {
         continue;
@@ -143,13 +112,11 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
    * - included/imported from another ftl
    */
   @SuppressWarnings("javadoc")
-  public void searchFtls(Set<NonJavaIMember> ftlList, Set<String> referencedFtlList) throws CoreException {
-    int localSearchCurrentPosition = 0;
-    int localSearchTotal = ftlList.size();
+  public void searchFtls(Set<NonJavaIMember> ftlList, Set<String> referencedFtlList,
+      UISearchProgressHelper progressHelper) throws CoreException {
 
     for (NonJavaIMember ftlMember : ftlList) {
-      checkForCancel();
-      showProgress("ftls", ++localSearchCurrentPosition, localSearchTotal);
+      progressHelper.showProgress("ftls", markerCreated, exceptionListDuringSearch.size());
 
       if (!referencedFtlList.contains(ftlMember.getPathToFile())) {
 
@@ -174,14 +141,11 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
    * - referenced from a screen
    */
   @SuppressWarnings("javadoc")
-  public void searchBshOrGroovyFiles(Set<NonJavaIMember> bshOrGroovyList, Set<String> referencedBshOrGroovyList)
-      throws CoreException {
-    int localSearchCurrentPosition = 0;
-    int localSearchTotal = bshOrGroovyList.size();
+  public void searchBshOrGroovyFiles(Set<NonJavaIMember> bshOrGroovyList, Set<String> referencedBshOrGroovyList,
+      UISearchProgressHelper progressHelper) throws CoreException {
 
     for (NonJavaIMember bshOrGroovyMember : bshOrGroovyList) {
-      checkForCancel();
-      showProgress("ftls", ++localSearchCurrentPosition, localSearchTotal);
+      progressHelper.showProgress("bsh/groovy files", markerCreated, exceptionListDuringSearch.size());
 
       if (!referencedBshOrGroovyList.contains(bshOrGroovyMember.getPathToFile())) {
         markerFactory.createReferenceMarker(bshOrGroovyMember,
@@ -201,14 +165,11 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
    */
   @SuppressWarnings({ "javadoc" })
   public void searchViews(Map<String, ReferenceAndLocation> viewDefinitionMap, Set<String> referencedViewList,
-      Map<String, IResource> screenNameAndFilePathMap) throws CoreException {
-    int localSearchCurrentPosition = 0;
-    int localSearchTotal = viewDefinitionMap.size();
+      Map<String, IResource> screenNameAndFilePathMap, UISearchProgressHelper progressHelper) throws CoreException {
 
     //view references
     for (String viewName : viewDefinitionMap.keySet()) {
-      checkForCancel();
-      showProgress("views", ++localSearchCurrentPosition, localSearchTotal);
+      progressHelper.showProgress("views", markerCreated, exceptionListDuringSearch.size());
 
       if (!referencedViewList.contains(viewName)) {
         NonJavaIMember viewIMember = getNonJavaIMemberForViewDefinition(viewName,
@@ -260,14 +221,11 @@ public class OfbizSpecificSearchManager /*extends SearchManager*/{
 
   }
 
-  public void searchScreens(Map<String, IResource> screenNameAndFilePathMap, Set<String> referencedScreenList)
-      throws CoreException {
-    int localSearchCurrentPosition = 0;
-    int localSearchTotal = screenNameAndFilePathMap.size();
+  public void searchScreens(Map<String, IResource> screenNameAndFilePathMap, Set<String> referencedScreenList,
+      UISearchProgressHelper progressHelper) throws CoreException {
 
     for (String screenName : screenNameAndFilePathMap.keySet()) {
-      checkForCancel();
-      showProgress("screens", ++localSearchCurrentPosition, localSearchTotal);
+      progressHelper.showProgress("screens", markerCreated, exceptionListDuringSearch.size());
 
       if (!referencedScreenList.contains(screenName)) {
         markerFactory.createReferenceMarker(
