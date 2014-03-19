@@ -11,7 +11,7 @@ some of the services (and other items) are not used any more.
 
 --- How to use -------------------------------------
 1) Grab the latest release from https://github.com/holdfenytolvaj/org.ucdetector.ofbiz/releases
-2) You need to unzip into eclipse's dropin folder.
+2) You need to put both jars into eclipse's dropin folder.
    (In Ubuntu: ~/.eclipse/org.eclipse.platform../dropins)
 3) Start eclipse
 4) Right click on Project -> select UCDetector -> Analyze Ofbiz
